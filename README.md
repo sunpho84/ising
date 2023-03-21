@@ -14,7 +14,7 @@ make
 
 Configuration options:
 
-``` bash
+```
   --enable-measurement-cache
                           Enable cache for measurement
   --enable-local-energy-change

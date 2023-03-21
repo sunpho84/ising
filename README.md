@@ -12,6 +12,18 @@ cd build
 make
 ```
 
+Configuration options:
+
+``` bash
+  --enable-measurement-cache
+                          Enable cache for measurement
+  --enable-local-energy-change
+                          Enable local energy change measurement
+  --enable-lookup-table-accept-reject
+                          Enable lookup table for accept/reject step
+```
+
+
 To make things simple, the input can be passed from screen:
 ```
 L? 30

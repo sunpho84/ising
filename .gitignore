@@ -11,3 +11,6 @@
 /Makefile.in
 /config/depcomp
 /src/config.hpp.in~
+/.cache/
+/compile_commands.json
+/configure~

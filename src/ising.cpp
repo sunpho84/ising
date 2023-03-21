@@ -1,3 +1,5 @@
+#include <src/config.hpp>
+
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -14,11 +16,6 @@ using Site=int;
 using Spin=int;
 using Coords=array<Coord,2>;
 using Neighs=array<Site,4>;
-
-/// Algorithms parameters
-const bool useCache=true;
-const bool useLocalEnergyChange=true;
-const bool useLookupTableAcceptReject=true;
 
 /// Input parameters
 int L;
@@ -202,7 +199,7 @@ void acceptReject(const int dE,const Site site,const Spin oldSpin)
   if(not acc)
     conf[site]=oldSpin;
   else 
-    if(useCache)
+    if(useMeasurementCache)
       {
 	cachedSpinSum+=conf[site]-oldSpin;
 	cachedEnergy+=dE;
@@ -244,7 +241,7 @@ void updateConf()
 /// Performs the measurements
 void makeMeasurements()
 {
-  if(useCache)
+  if(useMeasurementCache)
     {
       magnetization.push_back(getCachedMagnetization());
       energy.push_back(cachedEnergy);

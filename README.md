@@ -29,25 +29,25 @@ try making different build and compare times:
 
 ``` bash
 # no optimization
-$ mkdir buildNoOpt
-$ cd buildNoOpt
-$ ../configure
-$ make
-$ cd ..
+mkdir buildNoOpt
+cd buildNoOpt
+../configure
+make
+cd ..
 
 #optimization
-$ mkdir buildOpt
-$ cd buildOpt
-$ ../configure CXXFLAGS=-O3
-$ make
-$ cd ..
+mkdir buildOpt
+cd buildOpt
+../configure CXXFLAGS=-O3
+make
+cd ..
 
 #optimization and local energy change estimates
-$ mkdir buildOptLocalChange
-$ cd buildOptLocalChange
-$ ../configure CXXFLAGS=-O3 --enable-local-energy-change
-$ make
-$ cd ..
+mkdir buildOptLocalChange
+cd buildOptLocalChange
+../configure CXXFLAGS=-O3 --enable-local-energy-change
+make
+cd ..
 
 ...
 

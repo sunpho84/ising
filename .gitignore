@@ -1,10 +1,5 @@
-/aclocal.m4
 /autom4te.cache/
-/configure
-/src/config.hpp.in
 /build/
-/Makefile.in
-/config/depcomp
 /src/config.hpp.in~
 /.cache/
 /compile_commands.json

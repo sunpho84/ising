@@ -8,13 +8,15 @@ cd ising
 bash config/bootstrap
 mkdir build
 cd build
-../configure CXXFLAGS=-O3
+../configure
 make
 ```
 
-Configuration options:
+## Configuration options:
 
 ```
+  CXXFLAGS=-O3
+	                      Optimization turned on
   --enable-measurement-cache
                           Enable cache for measurement
   --enable-local-energy-change
@@ -23,6 +25,30 @@ Configuration options:
                           Enable lookup table for accept/reject step
 ```
 
+try making different build and compare times:
+
+``` bash
+cd buildNoOpt
+../configure
+make
+cd ..
+
+cd buildOpt
+../configure CXXFLAGS=-O3
+make
+cd ..
+
+cd buildOptLocalChange
+../configure CXXFLAGS=-O3 --enable-local-energy-change
+make
+cd ..
+
+...
+
+```
+
+
+## Input parameters
 
 To make things simple, the input can be passed from screen:
 ```

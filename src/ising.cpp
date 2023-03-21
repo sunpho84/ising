@@ -15,14 +15,26 @@ using Spin=int;
 using Coords=array<Coord,2>;
 using Neighs=array<Site,4>;
 
+/// Algorithms parameters
+const bool useCache=true;
+const bool useLocalEnergyChange=true;
+const bool useLookupTableAcceptReject=true;
+
 /// Input parameters
 int L;
 double Beta;
 int nEvol;
 int inputSeed;
 
+/// Measurements
+int cachedEnergy;
+int cachedSpinSum;
+vector<int> energy;
+vector<double> magnetization;
+
 /// Configuration
 vector<Spin> conf;
+int nAcc;
 
 /// Helpers
 int V;
@@ -30,45 +42,78 @@ vector<Neighs> neighs;
 mt19937 gen;
 array<double,17> expTable;
 
+///////////////////////// Time measurements ////////////////////////////////////////
+
+/// Alias for moment in time
 using Instant=chrono::steady_clock::time_point;
 
-/// Machine clock type
+/// Get current moment
 Instant now()
 {
   return chrono::steady_clock::now();
 }
 
+/// Takes the difference between two instants as second
 double durationInSec(const Instant beg,const Instant end)
 {
   return chrono::duration<double>(end-beg).count();
 }
 
+///////////////////////////// Geometry over the lattice ////////////////////////////////////
+
+/// Computes the coordinate of a given site
 Coords coordsOfSite(const Site site)
 {
   return {site%L,site/L};
 }
 
+/// Computes the site given the coordinates
 Site siteOfCoords(const Coord x,const Coord y)
 {
   return x+L*y;
 }
 
-Spin getRndSpin()
+//////////////////////////// Random number generation /////////////////////////////////////
+
+/// Returns +/-1
+Spin drawRndSpin()
 {
   return uniform_int_distribution<int>(0,1)(gen)*2-1;
 }
 
-double magnetization()
+/// Returns uniform number distributed between [0;1)
+double drawUniformNumber()
 {
-  int sumSites=0;
+  return uniform_real_distribution<double>(0,1)(gen);
+}
+
+///////////////////////// Measurements ////////////////////////////////////////
+
+/// Computes the sum of spin
+Spin measureSpinSum()
+{
+  Spin sumSpin=0;
   
   for(Site site=0;site<V;site++)
-    sumSites+=conf[site];
+    sumSpin+=conf[site];
   
-  return (double)sumSites/V;
- }
+  return sumSpin;
+}
 
-double energy()
+/// Compute the magnetization
+double measureMagnetization()
+{
+  return measureSpinSum()/(double)V;
+}
+
+/// Compute the cached magnetization
+double getCachedMagnetization()
+{
+  return cachedSpinSum/(double)V;
+}
+
+/// Computes the total energy
+int measureEnergy()
 {
   int energy=0;
   
@@ -79,7 +124,8 @@ double energy()
   return energy;
 }
 
-double energyOfSite(const Site site)
+/// Computes the energy relative to a given site
+int energyOfSite(const Site site)
 {
   int energy=0;
   
@@ -89,8 +135,16 @@ double energyOfSite(const Site site)
   return energy;
 }
 
+/////////////////////////////////////////////////////////////////
+
+/// Setup the simulation
 void setup()
 {
+  nAcc=0;
+  
+  magnetization.reserve(nEvol);
+  energy.reserve(nEvol);
+  
   /// Compute total volume
   V=L*L;
   
@@ -103,7 +157,7 @@ void setup()
   
   /// Draw a conf
   for(Site site=0;site<V;site++)
-    conf[site]=getRndSpin();
+    conf[site]=drawRndSpin();
   
   /// Define site neighbors
   for(int site=0;site<V;site++)
@@ -119,36 +173,90 @@ void setup()
   
   for(int i=0;i<=16;i++)
     expTable[i]=exp(-Beta*(i-8));
+  
+  cachedEnergy=measureEnergy();
+  cachedSpinSum=measureSpinSum();
 }
 
+/////////////////////////////////////////////////////////////////
+
+/// Gets probability to accept/rejecta
+double getPacc(const int dE)
+{
+  if(useLookupTableAcceptReject)
+    return expTable[dE+8];
+  else
+    return exp(-Beta*dE);
+}
+
+/// Accept/reject
+void acceptReject(const int dE,const Site site,const Spin oldSpin)
+{
+  const double pAcc=getPacc(dE);
+  
+  const double r=drawUniformNumber();
+  const bool acc=(r<pAcc);
+  
+  nAcc+=acc;
+  
+  if(not acc)
+    conf[site]=oldSpin;
+  else 
+    if(useCache)
+      {
+	cachedSpinSum+=conf[site]-oldSpin;
+	cachedEnergy+=dE;
+      }
+}
+
+/////////////////////////////////////////////////////////////////
+
+/// Updates a single site
 void updateSite(const Site site)
 {
-  // const double oldEn=energy();
-  const double oldSiteEn=energyOfSite(site);
   const Spin oldSpin=conf[site];
+  int oldEn;
+  if(useLocalEnergyChange)
+    oldEn=energyOfSite(site);
+  else
+    oldEn=measureEnergy();
   
-  conf[site]=getRndSpin();
-  // const double newEn=energy();
-  const double newSiteEn=energyOfSite(site);
+  conf[site]=drawRndSpin();
   
-  // cout<<newEn-oldEn<<" "<<newSiteEn-oldSiteEn<<endl;
+  int newEn;
+  if(useLocalEnergyChange)
+    newEn=energyOfSite(site);
+  else
+    newEn=measureEnergy();
   
-  //const double pAcc=exp(-Beta*(newSiteEn-oldSiteEn));
-  // const double pAcc=exp(-Beta*(newEn-oldEn));
-  const double pAcc=expTable[newSiteEn-oldSiteEn+8];
-  //cout<<newEn-oldEn+8<<" "<<pAcc<<" "<<pAcc2<<endl;
-  const double r=uniform_real_distribution<double>(0,1)(gen);
-  
-  if(r>=pAcc)
-    conf[site]=oldSpin;
+  acceptReject(newEn-oldEn,site,oldSpin);
 }
 
+/////////////////////////////////////////////////////////////////
+
+/// Fully sweep a configuration
 void updateConf()
 {
   for(Site site=0;site<V;site++)
     updateSite(site);
 }
 
+/// Performs the measurements
+void makeMeasurements()
+{
+  if(useCache)
+    {
+      magnetization.push_back(getCachedMagnetization());
+      energy.push_back(cachedEnergy);
+    }
+  else
+    {
+      magnetization.push_back(measureMagnetization());
+      energy.push_back(measureEnergy());
+    }
+}
+
+/// Store the configuration
 void storeConf()
 {
   ofstream confFile("conf.dat");
@@ -173,17 +281,27 @@ int main()
   
   setup();
   
-  ofstream out("measure.dat");
   auto beg=now();
   for(int iEvol=0;iEvol<nEvol;iEvol++)
     {
-      out<<iEvol<<" "<<magnetization()<<endl;
+      makeMeasurements();
       updateConf();
     }
   auto end=now();
   cout<<durationInSec(beg,end)<<" seconds"<<endl;
+  cout<<"Pacc: "<<(double)nAcc/(nEvol*V)<<endl;
   
   storeConf();
+  
+  /////////////////////////////////////////////////////////////////
+  
+  ofstream magnetizationFile("magnetization.dat");
+  ofstream energyFile("energy.dat");
+  for(int iEvol=0;iEvol<nEvol;iEvol++)
+    {
+      magnetizationFile<<iEvol<<" "<<magnetization[iEvol]<<endl;
+      energyFile<<iEvol<<" "<<energy[iEvol]<<endl;
+    }
   
   return 0;
 }

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <chrono>
+// #include <chrono>
 #include <vector>
 
 using namespace std;
@@ -41,20 +41,20 @@ array<double,17> expTable;
 
 ///////////////////////// Time measurements ////////////////////////////////////////
 
-/// Alias for moment in time
-using Instant=chrono::steady_clock::time_point;
+// /// Alias for moment in time
+// using Instant=chrono::steady_clock::time_point;
 
-/// Get current moment
-Instant now()
-{
-  return chrono::steady_clock::now();
-}
+// /// Get current moment
+// Instant now()
+// {
+//   return chrono::steady_clock::now();
+// }
 
-/// Takes the difference between two instants as second
-double durationInSec(const Instant beg,const Instant end)
-{
-  return chrono::duration<double>(end-beg).count();
-}
+// /// Takes the difference between two instants as second
+// double durationInSec(const Instant beg,const Instant end)
+// {
+//   return chrono::duration<double>(end-beg).count();
+// }
 
 ///////////////////////////// Geometry over the lattice ////////////////////////////////////
 
@@ -278,14 +278,14 @@ int main()
   
   setup();
   
-  auto beg=now();
+  // auto beg=now();
   for(int iEvol=0;iEvol<nEvol;iEvol++)
     {
       makeMeasurements();
       updateConf();
     }
-  auto end=now();
-  cout<<durationInSec(beg,end)<<" seconds"<<endl;
+  // auto end=now();
+  // cout<<durationInSec(beg,end)<<" seconds"<<endl;
   cout<<"Pacc: "<<(double)nAcc/(nEvol*V)<<endl;
   
   storeConf();

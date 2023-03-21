@@ -5,7 +5,7 @@ Compilation instructions:
 ``` bash
 git clone [the fork]
 cd ising
-bash config/boostrap
+bash config/bootstrap
 mkdir build
 cd build
 ../configure CXXFLAGS=-O3

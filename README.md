@@ -1,6 +1,8 @@
 # ising
 
+```
 scl enable devtoolset-11 bash
+```
 
 Compilation instructions:
 

@@ -101,6 +101,8 @@ void setup()
 {
   printf("nthreads: %d\n",omp_get_max_threads());
 ...
+```
+
 
 Choose number of threads from terminal, before launching the code:
 ```

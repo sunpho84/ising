@@ -84,10 +84,15 @@ where input contains simply:
 Outputs two files, `magnetization.dat` and `energy.dat`, containing for each line the evolution and measurement.
 
 
-## Adidng parallelization
+## Adding parallelization
 
+To parallelize the enrgy calculation:
 ```
 #pragma omp parallel for reduction(+:energy)
+  for(Site site=0;site<V;site++)
+    for(Dir dir=0;dir<2;dir++)
+      energy-=conf[site]*conf[neighs[site][dir]];
+
 ```
 
 Showing the number of threads employed

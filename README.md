@@ -106,5 +106,5 @@ void setup()
 
 Choose number of threads from terminal, before launching the code:
 ```
-$ export OM_NUM_THREADS=2
+$ export OMP_NUM_THREADS=2
 ```

@@ -160,7 +160,7 @@ void setup()
   for(int site=0;site<V;site++)
     {
       const Coords coords=coordsOfSite(site);
-      const Coord y=coords[0],x=coords[1];
+      const Coord x=coords[0],y=coords[1];
       
       neighs[site][0]=siteOfCoords((x+1)%L,y);
       neighs[site][1]=siteOfCoords(x,(y+1)%L);

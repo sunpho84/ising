@@ -13,10 +13,10 @@ assembly_reports=
 	$(CXXCOMPILE) -S $< -c -o -|$(top_srcdir)/config/asm_inspect.sh $@
 
 bin_PROGRAMS+= \
-        $(top_builddir)/bin/ising
+        bin/ising
 
-__top_builddir__bin_ising_SOURCES= \
-	%D%/src/ising.cpp
+bin_ising_SOURCES= \
+	src/ising.cpp
 
 #generate assembly report if asked
 if ASSEMBLY_REPORT

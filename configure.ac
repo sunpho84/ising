@@ -16,7 +16,7 @@ AC_MSG_RESULT([$CONFIG_TIME])
 #parameters definition
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_AUX_DIR([config])
-AM_INIT_AUTOMAKE([1.14 no-define foreign subdir-objects])
+AM_INIT_AUTOMAKE([1.13 no-define foreign subdir-objects])
 AC_CONFIG_HEADERS([src/config.hpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
@@ -27,7 +27,7 @@ AC_PROG_FC
 AC_PROG_CXX
 AC_PROG_RANLIB
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX(17,noext,mandatory)
+AX_CXX_COMPILE_STDCXX(11,noext,mandatory)
 
 LIBRARY_RESULT="---"
 SUMMARY_RESULT="---"

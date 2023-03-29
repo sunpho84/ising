@@ -82,3 +82,27 @@ where input contains simply:
 ```
 
 Outputs two files, `magnetization.dat` and `energy.dat`, containing for each line the evolution and measurement.
+
+
+## Adidng parallelization
+
+```
+#pragma omp parallel for reduction(+:energy)
+```
+
+Showing the number of threads employed
+```
+#include <omp.h>
+
+...
+
+/// Setup the simulation
+void setup()
+{
+  printf("nthreads: %d\n",omp_get_max_threads());
+...
+
+Choose number of threads from terminal, before launching the code:
+```
+$ export OM_NUM_THREADS=2
+```

@@ -113,3 +113,19 @@ Choose number of threads from terminal, before launching the code:
 ```
 $ export OMP_NUM_THREADS=2
 ```
+
+## Gnuplot commands
+
+Save a file with gnuplot
+
+```
+set terminal png 
+set output "file.png"
+plot "magnetization.dat" w l
+```
+
+Plot multiple files
+
+```
+plot "magnetization1.dat" w l, "magnetization2.dat" w l
+```

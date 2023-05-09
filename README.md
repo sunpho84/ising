@@ -136,9 +136,7 @@ mt19937 gen;
 
 must be changed into:
 
-``` c++
-vector<mt19937> gen;
-```
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L39
 
 This must be properly resized and initialized:
 
@@ -149,14 +147,9 @@ This must be properly resized and initialized:
 
 into
 
-``` c++
-  gen.resize(V);
-  for(Site site=0;site<V;site++)
-    gen[site].seed(inputSeed+site);
-```
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L148-L151
 
-
-The site generator must be passed explicitly to the routine which uses it:
+The site generator must be passed explicitly to the routine which uses it, changing:
 
 ``` c++
 double drawUniformNumber()
@@ -166,22 +159,16 @@ double drawUniformNumber()
 
 into:
 
-``` c++
-double drawUniformNumber(mt19937& gen)
-{
-...
-```
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81C1-L85
 
 A structure holding the update result must be created:
 
-``` c++
-/// Holds the results of the update of a site
-struct SiteUpdRes
-{
-  bool acc;
-  Spin dM;
-  int dE;
-};
-```
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L191-L197
 
 To be returned from the accept/reject:
+
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L199-L216
+
+The loop over the configuration update must be parallelized:
+
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L243-L263

@@ -130,34 +130,13 @@ plot "magnetization1.dat" w l, "magnetization2.dat" w l
 
 The global generator needs to become local (per-site):
 
-``` c++
-mt19937 gen;
-```
-
-must be changed into:
-
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L39
 
 This must be properly resized and initialized:
 
-``` c++
-  gen.seed(inputSeed);
-
-```
-
-into
-
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L148-L151
 
-The site generator must be passed explicitly to the routine which uses it, changing:
-
-``` c++
-double drawUniformNumber()
-{
-...
-```
-
-into:
+The site generator must be passed explicitly to the routine which uses it:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81C1-L85
 

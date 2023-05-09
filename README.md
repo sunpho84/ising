@@ -139,7 +139,7 @@ https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/
 
 The site generator must be passed explicitly to the routine which uses it:
 
-https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81C1-L85
+https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81-L85
 
 A structure holding the update result must be created:
 

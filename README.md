@@ -83,7 +83,48 @@ where input contains simply:
 
 Outputs two files, `magnetization.dat` and `energy.dat`, containing for each line the evolution and measurement.
 
+## Adding parallelization of the measurements
 
+To parallelize the energy calculation:
+```
+#pragma omp parallel for reduction(+:energy)
+  for(Site site=0;site<V;site++)
+    for(Dir dir=0;dir<2;dir++)
+      energy-=conf[site]*conf[neighs[site][dir]];
+
+```
+
+Showing the number of threads employed
+```
+#include <omp.h>
+
+...
+
+/// Setup the simulation
+void setup()
+{
+  printf("nthreads: %d\n",omp_get_max_threads());
+
+Choose number of threads from terminal, before launching the code:
+```
+$ export OMP_NUM_THREADS=2
+```
+
+## Gnuplot commands
+
+Save a file with gnuplot
+
+```
+set terminal png 
+set output "file.png"
+plot "magnetization.dat" w l
+```
+
+Plot multiple files
+
+```
+plot "magnetization1.dat" w l, "magnetization2.dat" w l
+```
 
 ## Parallelization of the algorithm
 
@@ -122,7 +163,6 @@ double drawUniformNumber()
 {
 ...
 ```
-
 
 into:
 

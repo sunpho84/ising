@@ -82,3 +82,66 @@ where input contains simply:
 ```
 
 Outputs two files, `magnetization.dat` and `energy.dat`, containing for each line the evolution and measurement.
+
+
+
+## Parallelization of the algorithm
+
+The global generator needs to become local (per-site):
+
+``` c++
+mt19937 gen;
+```
+
+must be changed into:
+
+``` c++
+vector<mt19937> gen;
+```
+
+This must be properly resized and initialized:
+
+``` c++
+  gen.seed(inputSeed);
+
+```
+
+into
+
+``` c++
+  gen.resize(V);
+  for(Site site=0;site<V;site++)
+    gen[site].seed(inputSeed+site);
+```
+
+
+The site generator must be passed explicitly to the routine which uses it:
+
+``` c++
+double drawUniformNumber()
+{
+...
+```
+
+
+into:
+
+``` c++
+double drawUniformNumber(mt19937& gen)
+{
+...
+```
+
+A structure holding the update result must be created:
+
+``` c++
+/// Holds the results of the update of a site
+struct SiteUpdRes
+{
+  bool acc;
+  Spin dM;
+  int dE;
+};
+```
+
+To be returned from the accept/reject:

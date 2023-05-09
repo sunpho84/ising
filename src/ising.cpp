@@ -248,8 +248,8 @@ void updateConf()
 #pragma omp parallel for reduction(+:cachedEnergy,cachedSpinSum,nAcc)
       for(Site redSite=0;redSite<V/2;redSite++)
 	{
-	  const Coord y=redSite/L;
-	  const Coord x=2*redSite%(L/2)+(par^(y%2));
+	  const Coord y=redSite/(L/2);
+	  const Coord x=2*(redSite%(L/2))+(par^(y%2));
 	  const Site site=siteOfCoords(x,y);
 	  const SiteUpdRes res=updateSite(site);
 	  nAcc+=res.acc;

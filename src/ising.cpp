@@ -36,7 +36,7 @@ int nAcc;
 /// Helpers
 int V;
 vector<Neighs> neighs;
-mt19937 gen;
+vector<mt19937> gen;
 array<double,17> expTable;
 
 ///////////////////////// Time measurements ////////////////////////////////////////
@@ -73,13 +73,13 @@ Site siteOfCoords(const Coord x,const Coord y)
 //////////////////////////// Random number generation /////////////////////////////////////
 
 /// Returns +/-1
-Spin drawRndSpin()
+Spin drawRndSpin(mt19937& gen)
 {
   return uniform_int_distribution<int>(0,1)(gen)*2-1;
 }
 
 /// Returns uniform number distributed between [0;1)
-double drawUniformNumber()
+double drawUniformNumber(mt19937& gen)
 {
   return uniform_real_distribution<double>(0,1)(gen);
 }
@@ -146,7 +146,9 @@ void setup()
   V=L*L;
   
   /// Reset the number generator
-  gen.seed(inputSeed);
+  gen.resize(V);
+  for(Site site=0;site<V;site++)
+    gen[site].seed(inputSeed+site);
   
   /// Resize conf and lookup table for neighbors
   conf.resize(V,+1);
@@ -154,7 +156,7 @@ void setup()
   
   /// Draw a conf
   for(Site site=0;site<V;site++)
-    conf[site]=drawRndSpin();
+    conf[site]=drawRndSpin(gen[site]);
   
   /// Define site neighbors
   for(int site=0;site<V;site++)
@@ -186,30 +188,37 @@ double getPacc(const int dE)
     return exp(-Beta*dE);
 }
 
+/// Holds the results of the update of a site
+struct SiteUpdRes
+{
+  bool acc;
+  Spin dM;
+  int dE;
+};
+
 /// Accept/reject
-void acceptReject(const int dE,const Site site,const Spin oldSpin)
+SiteUpdRes acceptReject(const int dE,const Site site,const Spin oldSpin)
 {
   const double pAcc=getPacc(dE);
   
-  const double r=drawUniformNumber();
+  const double r=drawUniformNumber(gen[site]);
   const bool acc=(r<pAcc);
   
-  nAcc+=acc;
+  //nAcc+=acc;
   
   if(not acc)
-    conf[site]=oldSpin;
-  else 
-    if(useMeasurementCache)
-      {
-	cachedSpinSum+=conf[site]-oldSpin;
-	cachedEnergy+=dE;
-      }
+    {
+      conf[site]=oldSpin;
+      return {0,0,0};
+    }
+  else
+    return {1,conf[site]-oldSpin,dE};
 }
 
 /////////////////////////////////////////////////////////////////
 
 /// Updates a single site
-void updateSite(const Site site)
+SiteUpdRes updateSite(const Site site)
 {
   const Spin oldSpin=conf[site];
   int oldEn;
@@ -218,7 +227,7 @@ void updateSite(const Site site)
   else
     oldEn=measureEnergy();
   
-  conf[site]=drawRndSpin();
+  conf[site]=drawRndSpin(gen[site]);
   
   int newEn;
   if(useLocalEnergyChange)
@@ -226,7 +235,7 @@ void updateSite(const Site site)
   else
     newEn=measureEnergy();
   
-  acceptReject(newEn-oldEn,site,oldSpin);
+  return acceptReject(newEn-oldEn,site,oldSpin);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -234,8 +243,23 @@ void updateSite(const Site site)
 /// Fully sweep a configuration
 void updateConf()
 {
-  for(Site site=0;site<V;site++)
-    updateSite(site);
+  for(int par=0;par<2;par++)
+    {
+#pragma omp parallel for reduction(+:cachedEnergy,cachedSpinSum,nAcc)
+      for(Site redSite=0;redSite<V/2;redSite++)
+	{
+	  const Coord y=redSite/L;
+	  const Coord x=2*redSite%(L/2)+(par^(y%2));
+	  const Site site=siteOfCoords(x,y);
+	  const SiteUpdRes res=updateSite(site);
+	  nAcc+=res.acc;
+	  if(useMeasurementCache)
+	    {
+	      cachedEnergy+=res.dE;
+	      cachedSpinSum+=res.dM;
+	    }
+	}
+    }
 }
 
 /// Performs the measurements

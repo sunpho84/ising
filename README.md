@@ -136,8 +136,7 @@ This must be properly resized and initialized:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L148-L151
 
-The site generator must be passed explicitly to the routine which uses
-it:
+The site generator must be passed explicitly to the routine which uses it:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81C1-L85
 

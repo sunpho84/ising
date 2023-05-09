@@ -136,7 +136,8 @@ This must be properly resized and initialized:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L148-L151
 
-The site generator must be passed explicitly to the routine which uses it:
+The site generator must be passed explicitly to the routine which uses
+it:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L81C1-L85
 
@@ -148,6 +149,7 @@ To be returned from the accept/reject:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L199-L216
 
-The loop over the configuration update must be parallelized:
+The loop over the configuration update must be parallelized, taking
+care of the needed reductions:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L243-L263

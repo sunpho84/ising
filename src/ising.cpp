@@ -36,6 +36,9 @@ int nAcc;
 /// Helpers
 int V;
 vector<Neighs> neighs;
+vector<bool> parOfSite;
+vector<int> eoSiteOfSite;
+vector<Site> siteOfEoSite;
 vector<mt19937> gen;
 array<double,17> expTable;
 
@@ -90,9 +93,10 @@ double drawUniformNumber(mt19937& gen)
 Spin measureSpinSum()
 {
   Spin sumSpin=0;
-  
-  for(Site site=0;site<V;site++)
-    sumSpin+=conf[site];
+
+  for(int par=0;par<2;par++)
+    for(Site eoSite=0;eoSite<V;eoSite++)
+      sumSpin+=conf[eoSite];
   
   return sumSpin;
 }
@@ -114,20 +118,20 @@ int measureEnergy()
 {
   int energy=0;
   
-  for(Site site=0;site<V;site++)
+  for(Site eoSite=0;eoSite<V;eoSite++)
     for(Dir dir=0;dir<2;dir++)
-      energy-=conf[site]*conf[neighs[site][dir]];
+      energy-=conf[eoSite]*conf[neighs[eoSite][dir]];
   
   return energy;
 }
 
 /// Computes the energy relative to a given site
-int energyOfSite(const Site site)
+int energyOfSite(const Site eoSite)
 {
   int energy=0;
   
   for(Dir dir=0;dir<4;dir++)
-      energy-=conf[site]*conf[neighs[site][dir]];
+      energy-=conf[eoSite]*conf[neighs[eoSite][dir]];
   
   return energy;
 }
@@ -145,30 +149,54 @@ void setup()
   /// Compute total volume
   V=L*L;
   
+  /// Resize conf and lookup table for neighbors
+  conf.resize(V,+1);
+  neighs.resize(V);
+  
+  parOfSite.resize(V);
+  eoSiteOfSite.resize(V);
+  for(Site site=0;site<V;site++)
+    {
+      const Coords coords=coordsOfSite(site);
+      parOfSite[site]=(coords[0]+coords[1])%2;
+    }
+  
+  siteOfEoSite.resize(V);
+  
+  for(Site eoSite=0;eoSite<V;eoSite++)
+    {
+      const int par=eoSite/(V/2);
+      const int redSite=eoSite%(V/2);
+      
+      const Coord y=redSite/(L/2);
+      const Coord x=2*(redSite%(L/2))+(par^(y%2));
+      const Site site=siteOfCoords(x,y);
+	
+      siteOfEoSite[eoSite]=site;
+      eoSiteOfSite[site]=eoSite;
+    }
+  
   /// Reset the number generator
   gen.resize(V);
   for(Site site=0;site<V;site++)
     gen[site].seed(inputSeed+site);
   
-  /// Resize conf and lookup table for neighbors
-  conf.resize(V,+1);
-  neighs.resize(V);
-  
   /// Draw a conf
-  for(Site site=0;site<V;site++)
-    conf[site]=drawRndSpin(gen[site]);
+  for(Site eoSite=0;eoSite<V;eoSite++)
+    conf[eoSite]=drawRndSpin(gen[eoSite]);
   
   /// Define site neighbors
-  for(int site=0;site<V;site++)
+  for(Site eoSite=0;eoSite<V;eoSite++)
     {
+      const Site site=siteOfEoSite[eoSite];
       const Coords coords=coordsOfSite(site);
       const Coord x=coords[0],y=coords[1];
-      
-      neighs[site][0]=siteOfCoords((x+1)%L,y);
-      neighs[site][1]=siteOfCoords(x,(y+1)%L);
-      neighs[site][2]=siteOfCoords((x+L-1)%L,y);
-      neighs[site][3]=siteOfCoords(x,(y+L-1)%L);
-    }
+	
+	neighs[eoSite][0]=eoSiteOfSite[siteOfCoords((x+1)%L,y)];
+	neighs[eoSite][1]=eoSiteOfSite[siteOfCoords(x,(y+1)%L)];
+	neighs[eoSite][2]=eoSiteOfSite[siteOfCoords((x+L-1)%L,y)];
+	neighs[eoSite][3]=eoSiteOfSite[siteOfCoords(x,(y+L-1)%L)];
+      }
   
   for(int i=0;i<=16;i++)
     expTable[i]=exp(-Beta*(i-8));
@@ -197,45 +225,45 @@ struct SiteUpdRes
 };
 
 /// Accept/reject
-SiteUpdRes acceptReject(const int dE,const Site site,const Spin oldSpin)
+SiteUpdRes acceptReject(const int dE,const Site eoSite,const Spin oldSpin)
 {
   const double pAcc=getPacc(dE);
   
-  const double r=drawUniformNumber(gen[site]);
+  const double r=drawUniformNumber(gen[eoSite]);
   const bool acc=(r<pAcc);
   
   //nAcc+=acc;
   
   if(not acc)
     {
-      conf[site]=oldSpin;
+      conf[eoSite]=oldSpin;
       return {0,0,0};
     }
   else
-    return {1,conf[site]-oldSpin,dE};
+    return {1,conf[eoSite]-oldSpin,dE};
 }
 
 /////////////////////////////////////////////////////////////////
 
 /// Updates a single site
-SiteUpdRes updateSite(const Site site)
+SiteUpdRes updateSite(const Site eoSite)
 {
-  const Spin oldSpin=conf[site];
+  const Spin oldSpin=conf[eoSite];
   int oldEn;
   if(useLocalEnergyChange)
-    oldEn=energyOfSite(site);
+    oldEn=energyOfSite(eoSite);
   else
     oldEn=measureEnergy();
   
-  conf[site]=drawRndSpin(gen[site]);
+  conf[eoSite]=drawRndSpin(gen[eoSite]);
   
   int newEn;
   if(useLocalEnergyChange)
-    newEn=energyOfSite(site);
+    newEn=energyOfSite(eoSite);
   else
     newEn=measureEnergy();
   
-  return acceptReject(newEn-oldEn,site,oldSpin);
+  return acceptReject(newEn-oldEn,eoSite,oldSpin);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -248,10 +276,18 @@ void updateConf()
 #pragma omp parallel for reduction(+:cachedEnergy,cachedSpinSum,nAcc)
       for(Site redSite=0;redSite<V/2;redSite++)
 	{
-	  const Coord y=redSite/(L/2);
-	  const Coord x=2*(redSite%(L/2))+(par^(y%2));
-	  const Site site=siteOfCoords(x,y);
-	  const SiteUpdRes res=updateSite(site);
+	  // const Site site=siteoOfSiteo[par][redSite];
+// 	  const Coord y=redSite/(L/2);
+// 	  const Coord x=2*(redSite%(L/2))+(par^(y%2));
+
+      // #pragma omp parallel for reduction(+:cachedEnergy,cachedSpinSum,nAcc)
+      // for(Site site=0;site<V;site++)
+      // 	if(parOfSite[site]){
+	  // const Coords c=coordsOfSite(site);
+	  // if((c[0]+c[1])%2==par)
+	    {
+	  
+	      const SiteUpdRes res=updateSite(redSite);
 	  nAcc+=res.acc;
 	  if(useMeasurementCache)
 	    {
@@ -261,6 +297,7 @@ void updateConf()
 	}
     }
 }
+  }
 
 /// Performs the measurements
 void makeMeasurements()
@@ -282,7 +319,7 @@ void storeConf()
 {
   ofstream confFile("conf.dat");
   for(Site site=0;site<V;site++)
-    if(conf[site]==+1)
+    if(conf[siteOfEoSite[site]]==+1)
       {
 	const Coords c=coordsOfSite(site);
 	confFile<<c[0]<<" "<<c[1]<<endl;

@@ -246,17 +246,18 @@ void updateConf()
   for(int par=0;par<2;par++)
     {
 #pragma omp parallel for reduction(+:cachedEnergy,cachedSpinSum,nAcc)
-      for(Site redSite=0;redSite<V/2;redSite++)
+      for(Site site=0;site<V;site++)
 	{
-	  const Coord y=redSite/(L/2);
-	  const Coord x=2*(redSite%(L/2))+(par^(y%2));
-	  const Site site=siteOfCoords(x,y);
-	  const SiteUpdRes res=updateSite(site);
-	  nAcc+=res.acc;
-	  if(useMeasurementCache)
+	  const Coords c=coordsOfSite(site);
+	  if((c[0]+c[1])%2==par)
 	    {
-	      cachedEnergy+=res.dE;
-	      cachedSpinSum+=res.dM;
+	      const SiteUpdRes res=updateSite(site);
+	      nAcc+=res.acc;
+	      if(useMeasurementCache)
+		{
+		  cachedEnergy+=res.dE;
+		  cachedSpinSum+=res.dM;
+		}
 	    }
 	}
     }

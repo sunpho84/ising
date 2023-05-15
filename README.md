@@ -153,3 +153,7 @@ The loop over the configuration update must be parallelized, taking
 care of the needed reductions:
 
 https://github.com/sunpho84/ising/blob/e6b75f432becd41b38591f38281ca9850dd759a2/src/ising.cpp#L243-L263
+
+or as discussed during lecture:
+
+https://github.com/sunpho84/ising/blob/5f45e1dc2e6e63ae8fb12d41fdc4b11624964ca0/src/ising.cpp#L243-L264
